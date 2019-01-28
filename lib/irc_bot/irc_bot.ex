@@ -19,7 +19,7 @@ defmodule TwitchIrc.IrcBot do
         ExIRC.Client.add_handler(client, self())
         ExIRC.Client.connect_ssl!(client, state.config.server_address, state.config.port)
 
-        {:producer, State.set_ex_irc_client(state, client)}
+        {:producer, State.set_ex_irc_client(state, client), dispatcher: GenStage.BroadcastDispatcher}
 
       {:error, error} ->
         Logger.debug("Failed to start ExIRC supervisor", [error: error])

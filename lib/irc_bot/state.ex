@@ -32,7 +32,7 @@ defmodule TwitchIrc.IrcBot.State do
   end
 
   def queue_pop(%__MODULE__{queue: queue, pending_demand: pending_demand} = state) do
-    {value, queue} = Deque.popleft(queue)
+    {value, queue} = Deque.pop(queue)
     case value do
       nil -> {value, %{state | :queue => queue, :pending_demand => pending_demand}}
       _ -> {value, %{state | :queue => queue, :pending_demand => pending_demand - 1}}
