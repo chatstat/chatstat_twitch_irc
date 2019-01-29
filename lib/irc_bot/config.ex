@@ -28,10 +28,9 @@ defmodule TwitchIrc.IrcBot.Config do
             username: nil,
             user_id: nil,
             oauth_token: nil,
-            # 30 minutes
-            timeout: 30 * 60
+            timeout: 120 * 60
 
-  def new(nickname, username, user_id, oauth_token, timeout \\ 30 * 60)
+  def new(nickname, username, user_id, oauth_token, timeout \\ 120 * 60)
       when is_bitstring(nickname) and is_bitstring(username) and is_integer(user_id) and is_bitstring(oauth_token) and
              is_integer(timeout) do
     %__MODULE__{

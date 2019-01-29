@@ -27,6 +27,10 @@ defmodule TwitchIrc.IrcBot.State do
     %{state | :pending_demand => pending_demand + incoming_demand}
   end
 
+  def queue_append_silent(%__MODULE__{queue: queue} = state, event) do
+    %{state | :queue => Deque.appendleft(queue, event)}
+  end
+
   def queue_append(%__MODULE__{queue: queue} = state, event) do
     %{state | :queue => Deque.appendleft(queue, event), :last_event => Timex.now("Etc/UTC")}
   end
