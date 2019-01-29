@@ -69,20 +69,4 @@ defmodule TwitchIrc.IrcBotSupervisor do
       strategy: :one_for_one
     )
   end
-
-  def test() do
-    [Config.new("nkyian", "nkyian", 1, "dqx3r2mn9fwvo6v4sk4lopiz4od43a"),
-    Config.new("nkyian", "summit1g", 1, "dqx3r2mn9fwvo6v4sk4lopiz4od43a"),
-    Config.new("nkyian", "timthetatman", 1, "dqx3r2mn9fwvo6v4sk4lopiz4od43a"),
-    Config.new("nkyian", "tfue", 1, "dqx3r2mn9fwvo6v4sk4lopiz4od43a"),
-    Config.new("nkyian", "sodapoppin", 1, "dqx3r2mn9fwvo6v4sk4lopiz4od43a"),
-    Config.new("nkyian", "shroud", 1, "dqx3r2mn9fwvo6v4sk4lopiz4od43a"),
-    Config.new("nkyian", "scump", 1, "dqx3r2mn9fwvo6v4sk4lopiz4od43a"),
-    Config.new("nkyian", "xqcow", 1, "dqx3r2mn9fwvo6v4sk4lopiz4od43a"),
-    Config.new("nkyian", "coscu", 1, "dqx3r2mn9fwvo6v4sk4lopiz4od43a")]
-  end
-
-  def test_me() do
-    [Config.new("nkyian", "nkyian", 1, "dqx3r2mn9fwvo6v4sk4lopiz4od43a")]
-  end
 end
