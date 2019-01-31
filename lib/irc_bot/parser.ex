@@ -46,11 +46,11 @@ defmodule TwitchIrc.IrcBot.Parser do
   end
 
   def parse({:parted, channel, %ExIRC.SenderInfo{host: host, nick: nickname, user: username}}) do
-    Models.Parted.new(%{channel: channel, host: host, nickname: nickname, username: username})
+    Models.UserParted.new(%{channel: channel, host: host, nickname: nickname, username: username})
   end
 
   def parse({:joined, channel, %ExIRC.SenderInfo{host: host, nick: nickname, user: username}}) do
-    Models.Joined.new(%{channel: channel, host: host, nickname: nickname, username: username})
+    Models.UserJoined.new(%{channel: channel, host: host, nickname: nickname, username: username})
   end
 
   def parse({:disconnected}) do

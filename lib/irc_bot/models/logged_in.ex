@@ -1,4 +1,4 @@
-defmodule TwitchIrc.IrcBot.Models.Joined do
+defmodule TwitchIrc.IrcBot.Models.LoggedIn do
     defstruct []
 
     def new() do
