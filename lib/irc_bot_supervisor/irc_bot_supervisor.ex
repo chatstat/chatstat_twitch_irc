@@ -2,6 +2,8 @@ defmodule TwitchIrc.IrcBotSupervisor do
   use DynamicSupervisor
 
   alias TwitchIrc.IrcBot.Config
+  alias TwitchIrc.IrcBot
+  alias TwitchIrc.IrcProducerConsumer
 
   def start_link(_arg) do
     DynamicSupervisor.start_link(__MODULE__, nil, name: __MODULE__)
@@ -22,7 +24,7 @@ defmodule TwitchIrc.IrcBotSupervisor do
   def irc_bot_list_expiration() do
     DynamicSupervisor.which_children(__MODULE__)
     |> Enum.map(fn({:undefined, pid, :worker, [TwitchIrc.IrcBot]}) ->
-      name = TwitchIrc.IrcBot.irc_bot_info(pid).name
+      name = elem(TwitchIrc.IrcBot.irc_bot_info(pid).name, 1)
       expiration = TwitchIrc.IrcBot.has_expired?(name)
       %{pid: pid, name: name, expiration: expiration}
     end)
@@ -35,6 +37,7 @@ defmodule TwitchIrc.IrcBotSupervisor do
     end)
     |> Enum.map(fn(bot) ->
       Task.async(fn ->
+
         terminate_irc_bot(bot.pid)
       end)
     end)
@@ -44,8 +47,7 @@ defmodule TwitchIrc.IrcBotSupervisor do
   end
 
   def terminate_irc_bot(username) when is_bitstring(username) do
-    TwitchIrc.IrcProducerConsumer.cancel(username)
-    DynamicSupervisor.terminate_child(__MODULE__, {:via, Registry, {Registry.IrcBot, {TwitchIrc.IrcBot,username}}})
+    DynamicSupervisor.terminate_child(__MODULE__, IrcBot.via(username))
   end
 
   def terminate_irc_bot(pid) do

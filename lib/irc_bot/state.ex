@@ -13,9 +13,16 @@ defmodule TwitchIrc.IrcBot.State do
     %__MODULE__{
       config: config,
       ex_irc_client: nil,
-      queue: Deque.new(5_000),
+      queue: Deque.new(1_000),
       pending_demand: 0,
       last_event: Timex.now("Etc/UTC"),
+    }
+  end
+
+  def server_info(%__MODULE__{} = state) do
+    %{
+      username: state.config.username,
+      user_id: state.config.user_id
     }
   end
 

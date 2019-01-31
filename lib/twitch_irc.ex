@@ -7,14 +7,15 @@ defmodule TwitchIrc do
     end
 
     def init(name) do
-      {:consumer, name, subscribe_to: [{name, max_demand: 100}]}
+      {:ok, file} = File.open "data.bin", [:write]
+      {:consumer, file, subscribe_to: [{name, max_demand: 100}]}
     end
 
-    def handle_events(events, _from, state) do
+    def handle_events(events, _from, file) do
       for event <- events do
-        IO.inspect(event)
+        IO.binwrite file, inspect(event) <> "\n"
       end
-      {:noreply, [], state}
+      {:noreply, [], file}
     end
   end
 end

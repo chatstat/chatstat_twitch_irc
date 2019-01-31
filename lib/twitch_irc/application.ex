@@ -10,14 +10,14 @@ defmodule TwitchIrc.Application do
     children = [
       TwitchIrc.IrcBotSupervisor,
       TwitchIrc.IrcProducerConsumer,
-      {Registry, [keys: :unique, name: Registry.IrcBot]}
+      {Registry, [keys: :unique, name: Registry.IrcBot, partitions: System.schedulers_online()]}
       # Starts a worker by calling: TwitchIrc.Worker.start_link(arg)
       # {TwitchIrc.Worker, arg},
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: TwitchIrc.Supervisor]
+    opts = [strategy: :one_for_all, name: TwitchIrc.Supervisor]
     Supervisor.start_link(children, opts)
   end
 end

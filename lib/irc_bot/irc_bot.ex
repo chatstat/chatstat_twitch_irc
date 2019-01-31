@@ -1,15 +1,26 @@
 defmodule TwitchIrc.IrcBot do
   use GenStage
   require Logger
+
   alias TwitchIrc.IrcBot.Config
   alias TwitchIrc.IrcBot.State
+  alias TwitchIrc.IrcProducerConsumer
+  alias TwitchIrc.IrcBot.Parser
 
   def start_link(%Config{} = config) do
     GenStage.start_link(
       __MODULE__,
       State.new(config),
-      name:  {:via, Registry, {Registry.IrcBot, {__MODULE__, config.username}}}
+      name: via(config)
     )
+  end
+
+  def via(username) when is_bitstring(username) do
+    {:via, Registry, {Registry.IrcBot, {__MODULE__, username}}}
+  end
+
+  def via(%Config{} = config) do
+    {:via, Registry, {Registry.IrcBot, {__MODULE__, config.username}}}
   end
 
   def init(%State{} = state) do
@@ -19,7 +30,7 @@ defmodule TwitchIrc.IrcBot do
         ExIRC.Client.add_handler(client, self())
         ExIRC.Client.connect_ssl!(client, state.config.server_address, state.config.port)
 
-        TwitchIrc.IrcProducerConsumer.subscribe(state.config.username)
+        IrcProducerConsumer.subscribe(state.config.username)
 
         {:producer, State.set_ex_irc_client(state, client), dispatcher: GenStage.BroadcastDispatcher}
 
@@ -44,7 +55,7 @@ defmodule TwitchIrc.IrcBot do
   end
 
   def stop_server(username) when is_bitstring(username) do
-    GenServer.call({:via, Registry, {Registry.IrcBot, {__MODULE__,username}}}, :stop_server)
+    GenServer.call(via(username), :stop_server)
   end
 
   def stop_server(pid) do
@@ -52,7 +63,7 @@ defmodule TwitchIrc.IrcBot do
   end
 
   def last_event_duration(username) when is_bitstring(username) do
-    GenServer.call({:via, Registry, {Registry.IrcBot, {__MODULE__,username}}}, :last_event_duration)
+    GenServer.call(via(username), :last_event_duration)
   end
 
   def last_event_duration(pid) do
@@ -60,7 +71,7 @@ defmodule TwitchIrc.IrcBot do
   end
 
   def has_expired?(username) when is_bitstring(username) do
-    GenServer.call({:via, Registry, {Registry.IrcBot, {__MODULE__,username}}}, :has_expired)
+    GenServer.call(via(username), :has_expired)
   end
 
   def has_expired?(pid) do
@@ -78,7 +89,7 @@ defmodule TwitchIrc.IrcBot do
   def handle_call(:has_expired, _from, %State{} = state) do
     last_event_duration_seconds = Timex.Duration.to_seconds(State.last_event_duration(state))
     cond do
-      last_event_duration_seconds >= 30 ->
+      last_event_duration_seconds >= state.config.timeout ->
         dispatch_events_reply(true, State.queue_append_silent(state, {:has_expired, true}), [])
       last_event_duration_seconds < state.config.timeout ->
         dispatch_events_reply(false, State.queue_append_silent(state, {:has_expired, false}), [])
@@ -114,7 +125,9 @@ defmodule TwitchIrc.IrcBot do
   def handle_info({:joined, channel}, %State{} = state) do
     Logger.debug("Joined channel #{channel}")
 
-    with :ok <- ExIRC.Client.cmd(state.ex_irc_client, "CAP REQ :twitch.tv/tags")do
+    with :ok <- ExIRC.Client.cmd(state.ex_irc_client, "CAP REQ :twitch.tv/tags"),
+         :ok <- ExIRC.Client.cmd(state.ex_irc_client, "CAP REQ :twitch.tv/membership"),
+         :ok <- ExIRC.Client.cmd(state.ex_irc_client, "CAP REQ :twitch.tv/commands")do
       dispatch_events(State.queue_append(state, {:joined, channel}), [])
     else
       {:error, error} -> {:stop, error, state}
@@ -122,7 +135,15 @@ defmodule TwitchIrc.IrcBot do
   end
 
   def handle_info(message, %State{} = state) do
-    dispatch_events(State.queue_append(state, {:message, message}), [])
+    message = message
+    |> Parser.parse()
+
+    event = %{
+      message: message,
+      server: State.server_info(state),
+    }
+
+    dispatch_events(State.queue_append(state, event), [])
   end
 
   def handle_demand(incoming_demand, %State{} = state) do

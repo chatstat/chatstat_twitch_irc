@@ -1,6 +1,10 @@
 defmodule TwitchIrc.IrcProducerConsumer do
   use GenStage
 
+  alias TwitchIrc.IrcBot
+
+  require Logger
+
   def start_link(_ignored) do
     GenStage.start_link(
       __MODULE__,
@@ -14,14 +18,12 @@ defmodule TwitchIrc.IrcProducerConsumer do
   end
 
   def subscribe(username) do
-    GenStage.sync_subscribe(__MODULE__, to: {:via, Registry, {Registry.IrcBot, {TwitchIrc.IrcBot,username}}})
+    Logger.debug("#{username} subscribed to #{__MODULE__}")
+    GenStage.sync_subscribe(__MODULE__, to: IrcBot.via(username), cancel: :temporary)
   end
 
-  def cancel(username) do
-    GenStage.cancel(__MODULE__, {:via, Registry, {Registry.IrcBot, {TwitchIrc.IrcBot,username}}})
-  end
 
-  def handle_events(events, _from, number) do
-    {:noreply, events, number}
+  def handle_events(events, _from, state) do
+    {:noreply, events, state}
   end
 end
