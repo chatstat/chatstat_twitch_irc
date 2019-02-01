@@ -2,6 +2,10 @@ defmodule TwitchIrc.IrcProducerConsumer do
   use GenStage
 
   alias TwitchIrc.IrcBot
+  alias TwitchIrc.IrcBot.Models.Disconnected
+  alias TwitchIrc.IrcBot.Models.Event
+
+  alias TwitchIrc.IrcBotSupervisor
 
   require Logger
 
@@ -22,8 +26,8 @@ defmodule TwitchIrc.IrcProducerConsumer do
     GenStage.sync_subscribe(__MODULE__, to: IrcBot.via(username), cancel: :temporary)
   end
 
-
   def handle_events(events, _from, state) do
+
     {:noreply, events, state}
   end
 end

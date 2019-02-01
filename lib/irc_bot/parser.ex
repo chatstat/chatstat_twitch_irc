@@ -1,5 +1,4 @@
 defmodule TwitchIrc.IrcBot.Parser do
-
   alias TwitchIrc.IrcBot.Models
 
   require Logger
@@ -13,28 +12,35 @@ defmodule TwitchIrc.IrcBot.Parser do
           raw_command_to_map(raw_command)
           |> Map.put(:user, Map.get(args, :extra, ""))
           |> Models.Clearchat.new()
+
         :CLEARMSG ->
           raw_command_to_map(raw_command)
           |> Map.put(:message, Map.get(args, :extra, ""))
           |> Models.Clearmsg.new()
+
         :GLOBALUSERSTATE ->
           raw_command_to_map(raw_command)
           |> Models.Globaluserstate.new()
+
         :PRIVMSG ->
           raw_command_to_map(raw_command)
           |> Map.put(:message, Map.get(args, :extra, ""))
           |> Models.Privmsg.new()
+
         :ROOMSTATE ->
           raw_command_to_map(raw_command)
           |> Models.Roomstate.new()
+
         :USERNOTICE ->
           raw_command_to_map(raw_command)
           |> Map.put(:message, Map.get(args, :extra, ""))
           |> Models.Usernotice.new()
+
         :NOTICE ->
           raw_command_to_map(raw_command)
           |> Map.put(:message, Map.get(args, :extra, ""))
           |> Models.Notice.new()
+
         :USERSTATE ->
           raw_command_to_map(USERSTATE)
           |> Models.Userstate.new()
@@ -70,13 +76,15 @@ defmodule TwitchIrc.IrcBot.Parser do
     raw_command
     |> clean_raw_command()
     |> String.split(";")
-    |> Enum.reduce(%{}, fn(data, map) ->
-      data = data
-      |> String.split("=")
+    |> Enum.reduce(%{}, fn data, map ->
+      data =
+        data
+        |> String.split("=")
 
-      key = Enum.at(data, 0)
-      |> String.replace("-", "_")
-      |> String.to_atom()
+      key =
+        Enum.at(data, 0)
+        |> String.replace("-", "_")
+        |> String.to_atom()
 
       value = Enum.at(data, 1)
 
@@ -92,7 +100,7 @@ defmodule TwitchIrc.IrcBot.Parser do
     raw_args
     |> String.split(" ", parts: 4)
     |> Enum.with_index()
-    |> Enum.reduce(%{}, fn({arg, index}, map) ->
+    |> Enum.reduce(%{}, fn {arg, index}, map ->
       case index do
         0 -> Map.put(map, :host, arg)
         1 -> Map.put(map, :command, parse_command(arg))

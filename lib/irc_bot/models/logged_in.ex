@@ -1,7 +1,7 @@
 defmodule TwitchIrc.IrcBot.Models.LoggedIn do
-    defstruct []
+  defstruct []
 
-    def new() do
-        %__MODULE__{}
-    end
+  def new() do
+    %__MODULE__{}
+  end
 end

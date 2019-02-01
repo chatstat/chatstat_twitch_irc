@@ -15,7 +15,7 @@ defmodule TwitchIrc.IrcBot.State do
       ex_irc_client: nil,
       queue: Deque.new(1_000),
       pending_demand: 0,
-      last_event: Timex.now("Etc/UTC"),
+      last_event: Timex.now("Etc/UTC")
     }
   end
 
@@ -30,7 +30,8 @@ defmodule TwitchIrc.IrcBot.State do
     %{state | :ex_irc_client => client}
   end
 
-  def add_incoming_demand(%__MODULE__{pending_demand: pending_demand} = state, incoming_demand) when is_integer(incoming_demand) do
+  def add_incoming_demand(%__MODULE__{pending_demand: pending_demand} = state, incoming_demand)
+      when is_integer(incoming_demand) do
     %{state | :pending_demand => pending_demand + incoming_demand}
   end
 
@@ -44,6 +45,7 @@ defmodule TwitchIrc.IrcBot.State do
 
   def queue_pop(%__MODULE__{queue: queue, pending_demand: pending_demand} = state) do
     {value, queue} = Deque.pop(queue)
+
     case value do
       nil -> {value, %{state | :queue => queue, :pending_demand => pending_demand}}
       _ -> {value, %{state | :queue => queue, :pending_demand => pending_demand - 1}}

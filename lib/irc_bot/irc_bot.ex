@@ -28,27 +28,30 @@ defmodule TwitchIrc.IrcBot do
   def init(%State{} = state) do
     case ExIRC.start_link!() do
       {:ok, client} ->
-        Logger.debug("Successfully started ExIRC supervisor")
+        Logger.debug("Successfully started ExIRC client")
         ExIRC.Client.add_handler(client, self())
-        ExIRC.Client.connect_ssl!(client, state.config.server_address, state.config.port)
+        :ok = ExIRC.Client.connect_ssl!(client, state.config.server_address, state.config.port)
 
         IrcProducerConsumer.subscribe(state.config.username)
 
         {:producer, State.set_ex_irc_client(state, client), dispatcher: GenStage.BroadcastDispatcher}
 
       {:error, error} ->
-        Logger.debug("Failed to start ExIRC supervisor", [error: error])
+        Logger.debug("Failed to start ExIRC client", error: error)
         {:stop, error}
     end
   end
 
   def irc_bot_info(pid) do
     case Registry.keys(Registry.IrcBot, pid) do
-      [key] -> %{
-        name: key,
-        info: Process.info(pid)
-               }
-       [] -> :error
+      [key] ->
+        %{
+          name: key,
+          info: Process.info(pid)
+        }
+
+      [] ->
+        :error
     end
   end
 
@@ -90,11 +93,21 @@ defmodule TwitchIrc.IrcBot do
 
   def handle_call(:has_expired, _from, %State{} = state) do
     last_event_duration_seconds = Timex.Duration.to_seconds(State.last_event_duration(state))
+
     cond do
       last_event_duration_seconds >= state.config.timeout ->
-        dispatch_events_reply(true, State.queue_append_silent(state, Event.new(%Models.HasExpired{expired: true}, state)), [])
+        dispatch_events_reply(
+          true,
+          State.queue_append_silent(state, Event.new(%Models.HasExpired{expired: true}, state)),
+          []
+        )
+
       last_event_duration_seconds < state.config.timeout ->
-        dispatch_events_reply(false, State.queue_append_silent(state, Event.new(%Models.HasExpired{expired: false}, state)), [])
+        dispatch_events_reply(
+          false,
+          State.queue_append_silent(state, Event.new(%Models.HasExpired{expired: false}, state)),
+          []
+        )
     end
   end
 
@@ -102,16 +115,18 @@ defmodule TwitchIrc.IrcBot do
     Logger.debug("Connected to #{server_address}:#{port}")
     Logger.debug("Logging to #{server_address}:#{port} as #{state.config.nickname}..")
 
-    case ExIRC.Client.logon(state.ex_irc_client,
-      generate_password(state.config),
-      state.config.nickname,
-      state.config.nickname,
-      state.config.nickname
-    ) do
+    case ExIRC.Client.logon(
+           state.ex_irc_client,
+           generate_password(state.config),
+           state.config.nickname,
+           state.config.nickname,
+           state.config.nickname
+         ) do
       :ok ->
-
         dispatch_events(State.queue_append(state, Event.new(Models.Connected.new(), state)), [])
-      {:error, error} -> {:stop, error, state}
+
+      {:error, error} ->
+        {:stop, error, state}
     end
   end
 
@@ -144,8 +159,9 @@ defmodule TwitchIrc.IrcBot do
   end
 
   def handle_info(message, %State{} = state) do
-    message = message
-    |> Parser.parse()
+    message =
+      message
+      |> Parser.parse()
 
     dispatch_events(State.queue_append(state, Event.new(message, state)), [])
   end
@@ -162,6 +178,7 @@ defmodule TwitchIrc.IrcBot do
     case State.queue_pop(state) do
       {nil, state} ->
         {:reply, reply, events, state}
+
       {event, state} ->
         dispatch_events_reply(reply, state, [event | events])
     end
@@ -175,6 +192,7 @@ defmodule TwitchIrc.IrcBot do
     case State.queue_pop(state) do
       {nil, state} ->
         {:noreply, events, state}
+
       {event, state} ->
         dispatch_events(state, [event | events])
     end
@@ -189,7 +207,7 @@ defmodule TwitchIrc.IrcBot do
   end
 
   defp generate_channel_name(%Config{} = config) do
-    "##{config.username}"
+    "##{String.downcase(config.username)}"
   end
 
   defp generate_password(%Config{} = config) do

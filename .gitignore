@@ -626,3 +626,6 @@ ASALocalRun/
 healthchecksdb
 
 # End of https://www.gitignore.io/api/vim,emacs,linux,macos,erlang,elixir,windows,intellij,sublimetext,visualstudio,visualstudiocode
+twitch_irc.iml
+data.bin
+data.bin.zip
