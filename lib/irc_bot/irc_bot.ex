@@ -92,26 +92,28 @@ defmodule TwitchIrc.IrcBot do
   end
 
   def handle_call(:has_expired, _from, %State{} = state) do
+    timestamp = :os.system_time(:milli_seconds)
     last_event_duration_seconds = Timex.Duration.to_seconds(State.last_event_duration(state))
 
     cond do
       last_event_duration_seconds >= state.config.timeout ->
         dispatch_events_reply(
           true,
-          State.queue_append_silent(state, Event.new(%Models.HasExpired{expired: true}, state)),
+          State.queue_append_silent(state, Event.new(%Models.HasExpired{expired: true}, state, timestamp)),
           []
         )
 
       last_event_duration_seconds < state.config.timeout ->
         dispatch_events_reply(
           false,
-          State.queue_append_silent(state, Event.new(%Models.HasExpired{expired: false}, state)),
+          State.queue_append_silent(state, Event.new(%Models.HasExpired{expired: false}, state, timestamp)),
           []
         )
     end
   end
 
   def handle_info({:connected, server_address, port}, %State{} = state) do
+    timestamp = :os.system_time(:milli_seconds)
     Logger.debug("Connected to #{server_address}:#{port}")
     Logger.debug("Logging to #{server_address}:#{port} as #{state.config.nickname}..")
 
@@ -123,7 +125,7 @@ defmodule TwitchIrc.IrcBot do
            state.config.nickname
          ) do
       :ok ->
-        dispatch_events(State.queue_append(state, Event.new(Models.Connected.new(), state)), [])
+        dispatch_events(State.queue_append(state, Event.new(Models.Connected.new(), state, timestamp)), [])
 
       {:error, error} ->
         {:stop, error, state}
@@ -131,39 +133,39 @@ defmodule TwitchIrc.IrcBot do
   end
 
   def handle_info(:disconnected, %State{} = state) do
+    timestamp = :os.system_time(:milli_seconds)
     Logger.debug("Disconnected from #{state.config.server_address}:#{state.config.port}")
     ExIRC.Client.stop!(state.ex_irc_client)
-    dispatch_events(State.queue_append(state, Event.new(Models.Disconnected.new(), state)), [])
+    dispatch_events(State.queue_append(state, Event.new(Models.Disconnected.new(), state, timestamp)), [])
   end
 
   def handle_info(:logged_in, %State{} = state) do
+    timestamp = :os.system_time(:milli_seconds)
     channel_name = generate_channel_name(state.config)
 
     Logger.debug("Logged in to #{state.config.server_address}:#{state.config.port}")
     Logger.debug("Joining #{channel_name}..")
 
     ExIRC.Client.join(state.ex_irc_client, channel_name)
-    dispatch_events(State.queue_append(state, Event.new(Models.LoggedIn.new(), state)), [])
+    dispatch_events(State.queue_append(state, Event.new(Models.LoggedIn.new(), state, timestamp)), [])
   end
 
   def handle_info({:joined, channel}, %State{} = state) do
+    timestamp = :os.system_time(:milli_seconds)
     Logger.debug("Joined channel #{channel}")
 
     with :ok <- ExIRC.Client.cmd(state.ex_irc_client, "CAP REQ :twitch.tv/tags"),
          :ok <- ExIRC.Client.cmd(state.ex_irc_client, "CAP REQ :twitch.tv/membership"),
          :ok <- ExIRC.Client.cmd(state.ex_irc_client, "CAP REQ :twitch.tv/commands") do
-      dispatch_events(State.queue_append(state, Event.new(Models.Joined.new(), state)), [])
+      dispatch_events(State.queue_append(state, Event.new(Models.Joined.new(), state, timestamp)), [])
     else
       {:error, error} -> {:stop, error, state}
     end
   end
 
   def handle_info(message, %State{} = state) do
-    message =
-      message
-      |> Parser.parse()
-
-    dispatch_events(State.queue_append(state, Event.new(message, state)), [])
+    timestamp = :os.system_time(:milli_seconds)
+    dispatch_events(State.queue_append(state, Event.new(Parser.parse(message), state, timestamp)), [])
   end
 
   def handle_demand(incoming_demand, %State{} = state) do

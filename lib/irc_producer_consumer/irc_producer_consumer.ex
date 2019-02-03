@@ -2,10 +2,6 @@ defmodule TwitchIrc.IrcProducerConsumer do
   use GenStage
 
   alias TwitchIrc.IrcBot
-  alias TwitchIrc.IrcBot.Models.Disconnected
-  alias TwitchIrc.IrcBot.Models.Event
-
-  alias TwitchIrc.IrcBotSupervisor
 
   require Logger
 

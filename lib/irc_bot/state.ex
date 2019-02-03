@@ -1,5 +1,6 @@
 defmodule TwitchIrc.IrcBot.State do
   alias TwitchIrc.IrcBot.Config
+  alias TwitchIrc.Queue
 
   require Logger
 
@@ -13,7 +14,7 @@ defmodule TwitchIrc.IrcBot.State do
     %__MODULE__{
       config: config,
       ex_irc_client: nil,
-      queue: Deque.new(1_000),
+      queue: Queue.new(10_000),
       pending_demand: 0,
       last_event: Timex.now("Etc/UTC")
     }
@@ -36,15 +37,15 @@ defmodule TwitchIrc.IrcBot.State do
   end
 
   def queue_append_silent(%__MODULE__{queue: queue} = state, event) do
-    %{state | :queue => Deque.appendleft(queue, event)}
+    %{state | :queue => Queue.append(queue, event)}
   end
 
   def queue_append(%__MODULE__{queue: queue} = state, event) do
-    %{state | :queue => Deque.appendleft(queue, event), :last_event => Timex.now("Etc/UTC")}
+    %{state | :queue => Queue.append(queue, event), :last_event => Timex.now("Etc/UTC")}
   end
 
   def queue_pop(%__MODULE__{queue: queue, pending_demand: pending_demand} = state) do
-    {value, queue} = Deque.pop(queue)
+    {value, queue} = Queue.pop(queue)
 
     case value do
       nil -> {value, %{state | :queue => queue, :pending_demand => pending_demand}}

@@ -42,7 +42,7 @@ defmodule TwitchIrc.IrcBot.Parser do
           |> Models.Notice.new()
 
         :USERSTATE ->
-          raw_command_to_map(USERSTATE)
+          raw_command_to_map(raw_command)
           |> Models.Userstate.new()
       end
     else
@@ -52,11 +52,11 @@ defmodule TwitchIrc.IrcBot.Parser do
   end
 
   def parse({:parted, channel, %ExIRC.SenderInfo{host: host, nick: nickname, user: username}}) do
-    Models.UserParted.new(%{channel: channel, host: host, nickname: nickname, username: username})
+    Models.UserParted.new(%{channel_name: channel, host: host, nickname: nickname, username: username})
   end
 
   def parse({:joined, channel, %ExIRC.SenderInfo{host: host, nick: nickname, user: username}}) do
-    Models.UserJoined.new(%{channel: channel, host: host, nickname: nickname, username: username})
+    Models.UserJoined.new(%{channel_name: channel, host: host, nickname: nickname, username: username})
   end
 
   def parse({:disconnected}) do
