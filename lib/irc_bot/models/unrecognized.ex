@@ -1,5 +1,5 @@
 defmodule TwitchIrc.IrcBot.Models.Unrecognized do
-  defstruct [:id, :raw_msg]
+  defstruct [:id, :raw_data]
 
   alias TwitchIrc.UUID
 
