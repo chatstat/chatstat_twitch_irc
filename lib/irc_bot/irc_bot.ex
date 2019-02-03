@@ -92,7 +92,7 @@ defmodule TwitchIrc.IrcBot do
   end
 
   def handle_call(:has_expired, _from, %State{} = state) do
-    timestamp = :os.system_time(:milli_seconds)
+    timestamp = timestamp()
     last_event_duration_seconds = Timex.Duration.to_seconds(State.last_event_duration(state))
 
     cond do
@@ -113,7 +113,7 @@ defmodule TwitchIrc.IrcBot do
   end
 
   def handle_info({:connected, server_address, port}, %State{} = state) do
-    timestamp = :os.system_time(:milli_seconds)
+    timestamp = timestamp()
     Logger.debug("Connected to #{server_address}:#{port}")
     Logger.debug("Logging to #{server_address}:#{port} as #{state.config.nickname}..")
 
@@ -133,14 +133,14 @@ defmodule TwitchIrc.IrcBot do
   end
 
   def handle_info(:disconnected, %State{} = state) do
-    timestamp = :os.system_time(:milli_seconds)
+    timestamp = timestamp()
     Logger.debug("Disconnected from #{state.config.server_address}:#{state.config.port}")
     ExIRC.Client.stop!(state.ex_irc_client)
     dispatch_events(State.queue_append(state, Event.new(Models.Disconnected.new(), state, timestamp)), [])
   end
 
   def handle_info(:logged_in, %State{} = state) do
-    timestamp = :os.system_time(:milli_seconds)
+    timestamp = timestamp()
     channel_name = generate_channel_name(state.config)
 
     Logger.debug("Logged in to #{state.config.server_address}:#{state.config.port}")
@@ -151,7 +151,7 @@ defmodule TwitchIrc.IrcBot do
   end
 
   def handle_info({:joined, channel}, %State{} = state) do
-    timestamp = :os.system_time(:milli_seconds)
+    timestamp = timestamp()
     Logger.debug("Joined channel #{channel}")
 
     with :ok <- ExIRC.Client.cmd(state.ex_irc_client, "CAP REQ :twitch.tv/tags"),
@@ -164,7 +164,7 @@ defmodule TwitchIrc.IrcBot do
   end
 
   def handle_info(message, %State{} = state) do
-    timestamp = :os.system_time(:milli_seconds)
+    timestamp = timestamp()
     dispatch_events(State.queue_append(state, Event.new(Parser.parse(message), state, timestamp)), [])
   end
 
@@ -198,6 +198,10 @@ defmodule TwitchIrc.IrcBot do
       {event, state} ->
         dispatch_events(state, [event | events])
     end
+  end
+
+  defp timestamp() do
+    :os.system_time(:milli_seconds)
   end
 
   def generate_name(%Config{} = config) do
