@@ -1,0 +1,25 @@
+---
+name: Bug report
+about: Create a report to help us improve
+title: "[BUG]"
+labels: bug
+assignees: ''
+
+---
+
+### Precheck
+
+* Do not use the issues tracker for help or support (try our Discord)
+
+### Environment
+
+* Elixir & Erlang/OTP versions (elixir --version): 
+* Operating system: 
+
+### Current behavior
+
+Include code samples, errors and stacktraces if appropriate.
+
+### Expected behavior
+
+A short description on how you expect the code to behave.
