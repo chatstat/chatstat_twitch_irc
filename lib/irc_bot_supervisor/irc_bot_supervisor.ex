@@ -69,5 +69,4 @@ defmodule TwitchIrc.IrcBotSupervisor do
   def init(_arg) do
     DynamicSupervisor.init(strategy: :one_for_one)
   end
-
 end

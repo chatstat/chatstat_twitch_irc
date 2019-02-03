@@ -7,7 +7,7 @@ defmodule TwitchIrc.Queue do
     %__MODULE__{
       internal_queue: :queue.new(),
       max_size: max_size,
-      length: 0,
+      length: 0
     }
   end
 
@@ -41,6 +41,7 @@ defmodule TwitchIrc.Queue do
     case :queue.out(internal_queue) do
       {:empty, internal_queue} ->
         {nil, %{queue | :internal_queue => internal_queue}}
+
       {{:value, value}, internal_queue} ->
         {value, %{queue | :internal_queue => internal_queue, :length => length - 1}}
     end
@@ -78,11 +79,12 @@ defmodule TwitchIrc.Queue do
 
   defimpl Collectable do
     def into(original) do
-      {original, fn
-        queue, {:cont, value} -> TwitchIrc.Queue.append(queue, value)
-        queue, :done -> queue
-        _, :halt -> :ok
-      end}
+      {original,
+       fn
+         queue, {:cont, value} -> TwitchIrc.Queue.append(queue, value)
+         queue, :done -> queue
+         _, :halt -> :ok
+       end}
     end
   end
 
@@ -90,7 +92,7 @@ defmodule TwitchIrc.Queue do
     import Inspect.Algebra
 
     def inspect(queue, opts) do
-      concat ["#Queue<", Inspect.List.inspect(:queue.to_list(queue.internal_queue), opts), ">"]
+      concat(["#Queue<", Inspect.List.inspect(:queue.to_list(queue.internal_queue), opts), ">"])
     end
   end
 end

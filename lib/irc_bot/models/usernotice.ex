@@ -29,8 +29,10 @@ defmodule TwitchIrc.IrcBot.Models.Usernotice do
   ]
 
   def new(data_map) when is_map(data_map) do
-    data_map = Badges.update_map(data_map)
-    |> UUID.add_id()
+    data_map =
+      Badges.update_map(data_map)
+      |> UUID.add_id()
+
     struct(__MODULE__, data_map)
   end
 end

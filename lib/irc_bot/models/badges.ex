@@ -19,10 +19,12 @@ defmodule TwitchIrc.IrcBot.Models.Badges do
   end
 
   def new(data) when is_bitstring(data) do
-    badges = String.split(data, ",")
-    |> Enum.map(fn(badge) ->
-      Badge.new(badge)
-    end)
+    badges =
+      String.split(data, ",")
+      |> Enum.map(fn badge ->
+        Badge.new(badge)
+      end)
+
     %__MODULE__{
       badges: badges
     }
