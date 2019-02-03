@@ -1,7 +1,9 @@
 defmodule TwitchIrc.IrcBot.Models.LoggedIn do
-  defstruct []
+  defstruct [:id]
+
+  alias TwitchIrc.UUID
 
   def new() do
-    %__MODULE__{}
+    struct(__MODULE__, UUID.empty_id_map())
   end
 end

@@ -23,7 +23,6 @@ defmodule TwitchIrc.IrcProducerConsumer do
   end
 
   def handle_events(events, _from, state) do
-
     {:noreply, events, state}
   end
 end
